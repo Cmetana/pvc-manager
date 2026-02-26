@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*",     "destination": "https://RAILWAY_URL/api/:path*" },
-    { "source": "/uploads/:path*", "destination": "https://RAILWAY_URL/uploads/:path*" }
+    { "source": "/api/:path*",     "destination": "https://pvc-manager-production.up.railway.app/api/:path*" },
+    { "source": "/uploads/:path*", "destination": "https://pvc-manager-production.up.railway.app/uploads/:path*" }
   ]
 }
