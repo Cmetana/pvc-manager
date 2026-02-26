@@ -9,6 +9,10 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const BOT_TOKEN = process.env.BOT_TOKEN ?? '';
 
+const API_BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN
+  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+  : `http://localhost:${process.env.API_PORT ?? 3000}`;
+
 async function tgSend(chatId: string, text: string, extra: Record<string, any> = {}) {
   if (!BOT_TOKEN) return;
   try {
@@ -20,22 +24,16 @@ async function tgSend(chatId: string, text: string, extra: Record<string, any> =
   } catch (_) {}
 }
 
-async function tgSendPhoto(chatId: string, photoPath: string, caption: string) {
+async function tgSendPhoto(chatId: string, relativePhotoUrl: string, caption: string) {
   if (!BOT_TOKEN) return;
+  const photoUrl = `${API_BASE_URL}${relativePhotoUrl}`;
   try {
-    if (fs.existsSync(photoPath)) {
-      const formData = new FormData();
-      const blob = new Blob([fs.readFileSync(photoPath)]);
-      formData.append('chat_id', chatId);
-      formData.append('caption', caption);
-      formData.append('parse_mode', 'HTML');
-      formData.append('photo', blob, path.basename(photoPath));
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-        method: 'POST',
-        body: formData,
-      });
-      return;
-    }
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, photo: photoUrl, caption, parse_mode: 'HTML' }),
+    });
+    return;
   } catch (_) {}
   await tgSend(chatId, caption);
 }
@@ -228,7 +226,28 @@ export async function tasksRouter(app: FastifyInstance) {
     fs.writeFileSync(filepath, Buffer.concat(chunks));
 
     const photoUrl = `/uploads/${filename}`;
-    await prisma.task.update({ where: { id: parseInt(id) }, data: { photoUrl } });
+    const updatedTask = await prisma.task.update({
+      where: { id: parseInt(id) },
+      data: { photoUrl },
+      include: { type: true },
+    });
+
+    // Пуш з фото всім членам команди
+    if (updatedTask.teamId) {
+      const workers = await prisma.user.findMany({
+        where: { teamId: updatedTask.teamId, role: { in: ['worker', 'admin'] }, id: { not: user.id } },
+      });
+      const sp = calcSP(updatedTask.impostsPerItem, updatedTask.qtyItems);
+      const text =
+        `📸 <b>Фото до задачі!</b>\n\n` +
+        `📦 Партія: <b>${updatedTask.batch}</b> / Комірка: <b>${updatedTask.cell}</b>\n` +
+        `🏗 Тип: <b>${updatedTask.type.code} — ${updatedTask.type.label}</b>\n` +
+        `🔢 ${updatedTask.qtyItems} шт. · 💎 <b>${sp} СП</b>`;
+      for (const worker of workers) {
+        await tgSendPhoto(worker.telegramId, photoUrl, text);
+      }
+    }
+
     return { photoUrl };
   });
 
