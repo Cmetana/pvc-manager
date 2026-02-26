@@ -29,5 +29,7 @@ export interface Task {
   sp: number; isOverdue: boolean
 }
 
+export interface Competency { id: number; code: string; label: string }
+
 export interface DailyStat { date: string; plan: number; fact: number; diff: number; hoursPerSP: number | null }
 export interface TypeStat  { typeId: number; name: string; sp: number; items: number }
