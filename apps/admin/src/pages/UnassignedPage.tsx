@@ -88,7 +88,7 @@ export default function UnassignedPage() {
                   <tr key={task.id} className={clsx('hover:bg-gray-50', task.isOverdue && 'bg-red-50')}>
                     <td className="p-3 text-gray-400">#{task.id}</td>
                     <td className="p-3 font-medium">{task.batch} / {task.cell}</td>
-                    <td className="p-3 text-gray-600">{task.type.name}</td>
+                    <td className="p-3 text-gray-600">{task.type.label}</td>
                     <td className="p-3 font-bold">{task.sp}</td>
                     <td className={clsx('p-3 text-sm', task.isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500')}>
                       {new Date(task.plannedDate).toLocaleDateString('uk-UA')}
@@ -96,7 +96,7 @@ export default function UnassignedPage() {
                     </td>
                     <td className="p-3">
                       <span className="font-mono text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
-                        {task.type.competency.code}
+                        {task.type.code}
                       </span>
                     </td>
                     <td className="p-3">
