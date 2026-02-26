@@ -3,6 +3,7 @@ import { prisma } from '../../db/client';
 import { calcSP, isOverdue } from '../../shared/constants';
 import path from 'path';
 import fs from 'fs';
+import { v2 as cloudinary } from 'cloudinary';
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -12,6 +13,36 @@ const BOT_TOKEN = process.env.BOT_TOKEN ?? '';
 const API_BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN
   ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
   : `http://localhost:${process.env.API_PORT ?? 3000}`;
+
+const isCloudinaryConfigured = !!(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
+
+async function uploadPhoto(taskId: string, buffer: Buffer, originalFilename: string): Promise<string> {
+  if (isCloudinaryConfigured) {
+    const result = await new Promise<any>((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        { folder: 'pvc-tasks', public_id: `task_${taskId}_${Date.now()}`, resource_type: 'image' },
+        (err, res) => err ? reject(err) : resolve(res)
+      ).end(buffer);
+    });
+    return result.secure_url;
+  }
+  const ext = path.extname(originalFilename) || '.jpg';
+  const filename = `task_${taskId}_${Date.now()}${ext}`;
+  fs.writeFileSync(path.join(UPLOADS_DIR, filename), buffer);
+  return `/uploads/${filename}`;
+}
 
 async function tgSend(chatId: string, text: string, extra: Record<string, any> = {}) {
   if (!BOT_TOKEN) return;
@@ -24,14 +55,14 @@ async function tgSend(chatId: string, text: string, extra: Record<string, any> =
   } catch (_) {}
 }
 
-async function tgSendPhoto(chatId: string, relativePhotoUrl: string, caption: string) {
+async function tgSendPhoto(chatId: string, photoUrl: string, caption: string) {
   if (!BOT_TOKEN) return;
-  const photoUrl = `${API_BASE_URL}${relativePhotoUrl}`;
+  const fullUrl = photoUrl.startsWith('http') ? photoUrl : `${API_BASE_URL}${photoUrl}`;
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, photo: photoUrl, caption, parse_mode: 'HTML' }),
+      body: JSON.stringify({ chat_id: chatId, photo: fullUrl, caption, parse_mode: 'HTML' }),
     });
     return;
   } catch (_) {}
@@ -216,15 +247,11 @@ export async function tasksRouter(app: FastifyInstance) {
     const data = await (request as any).file();
     if (!data) return reply.status(400).send({ error: 'No file' });
 
-    const ext = path.extname(data.filename) || '.jpg';
-    const filename = `task_${id}_${Date.now()}${ext}`;
-    const filepath = path.join(UPLOADS_DIR, filename);
-
     const chunks: Buffer[] = [];
     for await (const chunk of data.file) chunks.push(chunk);
-    fs.writeFileSync(filepath, Buffer.concat(chunks));
+    const buffer = Buffer.concat(chunks);
 
-    const photoUrl = `/uploads/${filename}`;
+    const photoUrl = await uploadPhoto(id, buffer, data.filename ?? 'photo.jpg');
     const updatedTask = await prisma.task.update({
       where: { id: parseInt(id) },
       data: { photoUrl },
