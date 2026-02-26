@@ -1,4 +1,5 @@
 {
+  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/api/:path*",     "destination": "https://pvc-manager-production.up.railway.app/api/:path*" },
     { "source": "/uploads/:path*", "destination": "https://pvc-manager-production.up.railway.app/uploads/:path*" }
