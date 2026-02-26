@@ -165,8 +165,7 @@ export async function tasksRouter(app: FastifyInstance) {
 
       for (const worker of workers) {
         if (task.photoUrl) {
-          const photoPath = path.join(process.cwd(), task.photoUrl);
-          await tgSendPhoto(worker.telegramId, photoPath, text);
+          await tgSendPhoto(worker.telegramId, task.photoUrl, text);
         } else {
           await tgSend(worker.telegramId, text);
         }
