@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Довідники ───────────────────────────────────────────────
+
+model ConstructType {
+  id       Int     @id @default(autoincrement())
+  code     String  @unique  // K, G, KD, GD, Q, EXP, Q76, R, D
+  label    String           // Трапеція, Арка, Косі Двері...
+  isActive Boolean @default(true)
+
+  tasks            Task[]
+  teamTypes        TeamType[]
+  userCompetencies UserCompetency[]
+}
+
+model Team {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+
+  users     User[]
+  tasks     Task[]
+  teamTypes TeamType[]
+}
+
+// Які типи конструкцій бригада може виконувати
+model TeamType {
+  teamId Int
+  typeId Int
+  team   Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  type   ConstructType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, typeId])
+}
+
+// ─── Користувачі ─────────────────────────────────────────────
+
+enum Role {
+  admin
+  worker
+  banned
+  pending
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  telegramId String   @unique
+  username   String?
+  firstName  String?
+  lastName   String?
+  role       Role     @default(pending)
+  teamId     Int?
+  team       Team?    @relation(fields: [teamId], references: [id])
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  competencies  UserCompetency[]
+  assignedTasks Task[]           @relation("AssigneeTasks")
+  helpRequests  HelpRequest[]
+}
+
+// Компетенції працівника (які типи він вміє робити)
+model UserCompetency {
+  userId Int
+  typeId Int
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type   ConstructType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, typeId])
+}
+
+// ─── Завдання ────────────────────────────────────────────────
+
+enum TaskStatus {
+  New
+  InProgress
+  Rework
+  Done
+}
+
+model Task {
+  id             Int           @id @default(autoincrement())
+  batch          String
+  cell           String
+  typeId         Int
+  type           ConstructType @relation(fields: [typeId], references: [id])
+  qtyItems       Int
+  impostsPerItem Int
+  plannedDate    DateTime      @db.Date
+  status         TaskStatus    @default(New)
+  teamId         Int?
+  team           Team?         @relation(fields: [teamId], references: [id])
+  assigneeUserId Int?
+  assignee       User?         @relation("AssigneeTasks", fields: [assigneeUserId], references: [id])
+  description    String?       // Опис / примітка до завдання
+  photoUrl       String?       // Фото завдання (локальний шлях)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  doneAt         DateTime?
+
+  lateComment       String?
+  reworkComment     String?
+  reworkRequestedAt DateTime?
+  reworkApprovedAt  DateTime?
+  reworkDoneAt      DateTime?
+
+  helpRequests HelpRequest[]
+}
+
+// ─── Допомога ────────────────────────────────────────────────
+
+enum HelpCategory {
+  materials
+  drawing
+  question
+  other
+}
+
+model HelpRequest {
+  id         Int          @id @default(autoincrement())
+  userId     Int
+  user       User         @relation(fields: [userId], references: [id])
+  taskId     Int?
+  task       Task?        @relation(fields: [taskId], references: [id])
+  category   HelpCategory @default(other)
+  message    String
+  attachment String?
+  createdAt  DateTime     @default(now())
+  status     String       @default("sent")
+}

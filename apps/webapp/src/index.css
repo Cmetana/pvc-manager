@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Telegram WebApp змінні за замовчуванням */
+:root {
+  --tg-theme-bg-color: #ffffff;
+  --tg-theme-text-color: #000000;
+  --tg-theme-hint-color: #999999;
+  --tg-theme-link-color: #2481cc;
+  --tg-theme-button-color: #2481cc;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-secondary-bg-color: #f1f1f1;
+}
+
+body {
+  background-color: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* Плавний скрол */
+* {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}

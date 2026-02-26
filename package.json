@@ -1,0 +1,40 @@
+{
+  "name": "pvc-manager",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:bot\" \"npm run dev:webapp\" \"npm run dev:admin\"",
+    "dev:api": "tsx watch src/api/index.ts",
+    "dev:bot": "tsx watch src/bot/index.ts",
+    "dev:webapp": "cd apps/webapp && npm run dev",
+    "dev:admin": "cd apps/admin && npm run dev",
+    "install:all": "npm install && cd apps/webapp && npm install && cd ../admin && npm install",
+    "build": "prisma generate",
+    "start": "concurrently \"tsx src/api/index.ts\" \"tsx src/bot/index.ts\"",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@fastify/cors": "9.0.1",
+    "@fastify/multipart": "8.1.0",
+    "@fastify/static": "7.0.1",
+    "@prisma/client": "5.22.0",
+    "concurrently": "^8.2.2",
+    "date-fns": "^3.3.1",
+    "date-fns-tz": "^3.1.3",
+    "dotenv": "^16.4.5",
+    "fastify": "4.26.2",
+    "grammy": "^1.21.1",
+    "node-cron": "^3.0.3",
+    "tsx": "^4.7.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/node-cron": "^3.0.11",
+    "prisma": "5.22.0",
+    "typescript": "^5.3.3"
+  }
+}
