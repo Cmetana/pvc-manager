@@ -36,7 +36,11 @@ app.register(staticFiles, { root: uploadsDir, prefix: '/uploads/' });
 
 // ─── Auth middleware ──────────────────────────────────────────
 app.addHook('preHandler', async (request, reply) => {
-  if (request.url.startsWith('/uploads/') || request.url === '/health') return;
+  if (
+    request.url.startsWith('/uploads/') ||
+    request.url === '/health' ||
+    /^\/api\/tasks\/\d+\/photo$/.test(request.url)
+  ) return;
   const telegramId = request.headers['x-telegram-id'] as string;
   if (!telegramId) return reply.status(401).send({ error: 'Unauthorized' });
   const user = await prisma.user.findUnique({ where: { telegramId } });

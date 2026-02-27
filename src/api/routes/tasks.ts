@@ -38,10 +38,12 @@ async function uploadPhoto(taskId: string, buffer: Buffer, originalFilename: str
     });
     return result.secure_url;
   }
-  const ext = path.extname(originalFilename) || '.jpg';
-  const filename = `task_${taskId}_${Date.now()}${ext}`;
-  fs.writeFileSync(path.join(UPLOADS_DIR, filename), buffer);
-  return `/uploads/${filename}`;
+  // Fallback: зберігаємо бінарні дані прямо в БД (PostgreSQL persistent на Railway)
+  await prisma.task.update({
+    where: { id: parseInt(taskId) },
+    data: { photoData: buffer },
+  });
+  return `/api/tasks/${taskId}/photo`;
 }
 
 async function tgSend(chatId: string, text: string, extra: Record<string, any> = {}) {
@@ -146,6 +148,19 @@ export async function tasksRouter(app: FastifyInstance) {
     const task = await prisma.task.findUnique({ where: { id: parseInt(id) }, include: taskInclude });
     if (!task) return reply.status(404).send({ error: 'Not found' });
     return enrichTask(task);
+  });
+
+  // ─── GET /api/tasks/:id/photo — роздаємо фото з БД ──────────
+  app.get('/:id/photo', async (request, reply) => {
+    const { id } = request.params as any;
+    const task = await prisma.task.findUnique({
+      where: { id: parseInt(id) },
+      select: { photoData: true },
+    });
+    if (!task?.photoData) return reply.status(404).send({ error: 'No photo' });
+    reply.header('Content-Type', 'image/jpeg');
+    reply.header('Cache-Control', 'public, max-age=31536000, immutable');
+    return reply.send(task.photoData);
   });
 
   // ─── POST /api/tasks — створення ─────────────────────────────

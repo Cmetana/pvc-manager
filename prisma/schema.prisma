@@ -100,7 +100,8 @@ model Task {
   assigneeUserId Int?
   assignee       User?         @relation("AssigneeTasks", fields: [assigneeUserId], references: [id])
   description    String?       // Опис / примітка до завдання
-  photoUrl       String?       // Фото завдання (локальний шлях)
+  photoUrl       String?       // Фото завдання (URL або /api/tasks/:id/photo)
+  photoData      Bytes?        // Бінарні дані фото (fallback без Cloudinary)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   doneAt         DateTime?
