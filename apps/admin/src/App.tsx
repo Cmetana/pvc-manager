@@ -26,6 +26,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [loginId, setLoginId] = useState('')
   const [loginError, setLoginError] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     const saved = getAdminTelegramId()
@@ -82,22 +83,43 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex h-screen">
+      <div className="flex h-screen overflow-hidden">
+
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 z-20 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
-        <aside className="w-52 bg-white border-r border-gray-200 flex flex-col shrink-0">
-          <div className="p-4 border-b border-gray-100">
-            <h1 className="font-bold text-base">🏭 PVC Admin</h1>
-            <p className="text-xs text-gray-400 mt-0.5 truncate">
-              {user.firstName ?? user.username ?? user.telegramId}
-            </p>
+        <aside className={clsx(
+          'fixed md:static inset-y-0 left-0 z-30 w-56 bg-white border-r border-gray-200 flex flex-col shrink-0 transition-transform duration-200',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        )}>
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="min-w-0">
+              <h1 className="font-bold text-base">🏭 PVC Admin</h1>
+              <p className="text-xs text-gray-400 mt-0.5 truncate">
+                {user.firstName ?? user.username ?? user.telegramId}
+              </p>
+            </div>
+            <button
+              className="md:hidden text-gray-400 hover:text-gray-600 ml-2 p-1 text-lg leading-none"
+              onClick={() => setSidebarOpen(false)}
+            >
+              ✕
+            </button>
           </div>
           <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
             {NAV.map((n) => (
               <NavLink
                 key={n.path}
                 to={n.path}
+                onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) => clsx(
-                  'block px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  'block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                   isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'
                 )}
               >
@@ -116,18 +138,37 @@ export default function App() {
         </aside>
 
         {/* Контент */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <Routes>
-            <Route path="/" element={<Navigate to="/tasks" replace />} />
-            <Route path="/tasks"      element={<TasksPage />} />
-            <Route path="/unassigned" element={<UnassignedPage />} />
-            <Route path="/users"      element={<UsersPage />} />
-            <Route path="/refs"       element={<RefsPage />} />
-            <Route path="/import"     element={<ImportPage />} />
-            <Route path="/help"       element={<HelpPage />} />
-            <Route path="/stats"      element={<StatsPage />} />
-          </Routes>
-        </main>
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile header */}
+          <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 shrink-0">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="text-gray-600 hover:text-gray-900 p-1 -ml-1"
+              aria-label="Відкрити меню"
+            >
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor">
+                <rect y="3" width="22" height="2.5" rx="1.25"/>
+                <rect y="9.75" width="22" height="2.5" rx="1.25"/>
+                <rect y="16.5" width="22" height="2.5" rx="1.25"/>
+              </svg>
+            </button>
+            <span className="font-semibold text-gray-800">🏭 PVC Admin</span>
+          </header>
+
+          <main className="flex-1 overflow-y-auto bg-gray-50">
+            <Routes>
+              <Route path="/" element={<Navigate to="/tasks" replace />} />
+              <Route path="/tasks"      element={<TasksPage />} />
+              <Route path="/unassigned" element={<UnassignedPage />} />
+              <Route path="/users"      element={<UsersPage />} />
+              <Route path="/refs"       element={<RefsPage />} />
+              <Route path="/import"     element={<ImportPage />} />
+              <Route path="/help"       element={<HelpPage />} />
+              <Route path="/stats"      element={<StatsPage />} />
+            </Routes>
+          </main>
+        </div>
+
       </div>
     </BrowserRouter>
   )

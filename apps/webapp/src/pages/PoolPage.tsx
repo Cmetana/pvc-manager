@@ -72,29 +72,39 @@ export default function PoolPage({ user }: Props) {
         )}
       </div>
 
-      {/* Фільтр по даті */}
-      <DateFilter
-        value={dateFilter}
-        customDate={customDate}
-        onChange={(f, d) => { setDateFilter(f); setCustomDate(d) }}
-      />
+      {/* Блок командних задач */}
+      <div className="rounded-xl bg-blue-50 px-3 pt-2.5 pb-3 space-y-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-1 h-3.5 bg-blue-500 rounded-full" />
+          <span className="text-xs font-bold text-blue-600 tracking-wide uppercase">
+            Командні задачі
+          </span>
+        </div>
 
-      {/* Фільтр по статусу */}
-      <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-        {STATUS_FILTERS.map((s) => (
-          <button
-            key={s.key}
-            onClick={() => setStatusFilter(s.key)}
-            className={clsx(
-              'shrink-0 px-3 py-1 rounded-full text-xs font-medium',
-              statusFilter === s.key
-                ? 'bg-tg-button text-tg-button-text'
-                : 'bg-tg-secondary text-tg-hint'
-            )}
-          >
-            {s.label}
-          </button>
-        ))}
+        {/* Фільтр по даті */}
+        <DateFilter
+          value={dateFilter}
+          customDate={customDate}
+          onChange={(f, d) => { setDateFilter(f); setCustomDate(d) }}
+        />
+
+        {/* Фільтр по статусу */}
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {STATUS_FILTERS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setStatusFilter(s.key)}
+              className={clsx(
+                'shrink-0 px-3 py-1 rounded-full text-xs font-medium',
+                statusFilter === s.key
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-tg-hint border border-blue-100'
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Підсумок */}
