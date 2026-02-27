@@ -6,6 +6,7 @@ import Layout from './components/Layout'
 import PoolPage from './pages/PoolPage'
 import MyTasksPage from './pages/MyTasksPage'
 import StatsPage from './pages/StatsPage'
+import AdminPage from './pages/AdminPage'
 import LoadingScreen from './components/LoadingScreen'
 import ErrorScreen from './components/ErrorScreen'
 
@@ -54,6 +55,9 @@ export default function App() {
           <Route path="/pool" element={<PoolPage user={user} />} />
           <Route path="/my" element={<MyTasksPage user={user} />} />
           <Route path="/stats" element={<StatsPage user={user} />} />
+          {user.role === 'admin' && (
+            <Route path="/admin" element={<AdminPage />} />
+          )}
         </Routes>
       </Layout>
     </BrowserRouter>
