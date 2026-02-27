@@ -7,7 +7,6 @@ interface Props {
   onTake?:    (task: Task) => void
   onDone?:    (task: Task) => void
   onRework?:  (task: Task) => void
-  onHelp?:    (task: Task) => void
   onApprove?: (task: Task) => void
 }
 
@@ -28,7 +27,7 @@ const BADGE: React.CSSProperties = {
   color: 'var(--tg-theme-text-color, #111)',
 }
 
-export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp, onApprove }: Props) {
+export default function TaskCard({ task, mode, onTake, onDone, onRework, onApprove }: Props) {
   const [photoOpen, setPhotoOpen] = useState(false)
 
   const sp = (task.impostsPerItem + 1) * task.qtyItems
@@ -129,41 +128,20 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp,
 
             {/* Pool → В роботу */}
             {mode === 'pool' && task.status === 'New' && onTake && (
-              <button
-                onClick={() => onTake(task)}
-                style={{
-                  flexShrink: 0, background: '#3B82F6', color: '#fff',
-                  border: 'none', borderRadius: 10,
-                  padding: '7px 14px', fontSize: 13, fontWeight: 700,
-                  cursor: 'pointer', whiteSpace: 'nowrap',
-                }}
-              >
-                ▶ В роботу
-              </button>
+              <ActionBtn onClick={() => onTake(task)} color="#3B82F6" label="▶ В роботу" />
             )}
 
-            {/* My InProgress → колонка кнопок */}
+            {/* My InProgress → колонка: Виконано / Переробка */}
             {mode === 'my' && task.status === 'InProgress' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}>
-                {onDone   && <MiniBtn onClick={() => onDone!(task)}   color="#10B981" label="✅ Виконано" />}
-                {onRework && <MiniBtn onClick={() => onRework!(task)} color="#F59E0B" label="⚠️ Переробка" />}
-                {onHelp   && <MiniBtn onClick={() => onHelp(task)}    color="#9CA3AF" label="🆘 Допомога" />}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
+                {onDone   && <ActionBtn onClick={() => onDone!(task)}   color="#10B981" label="✅ Виконано" />}
+                {onRework && <ActionBtn onClick={() => onRework!(task)} color="#F59E0B" label="⚠️ Переробка" />}
               </div>
             )}
 
             {/* Admin → підтвердити */}
             {mode === 'admin' && task.status === 'Rework' && onApprove && (
-              <button
-                onClick={() => onApprove(task)}
-                style={{
-                  flexShrink: 0, background: '#10B981', color: '#fff',
-                  border: 'none', borderRadius: 10,
-                  padding: '7px 12px', fontSize: 12, fontWeight: 700,
-                  cursor: 'pointer', whiteSpace: 'nowrap',
-                }}
-              >
-                ✅ В роботу
-              </button>
+              <ActionBtn onClick={() => onApprove(task)} color="#10B981" label="✅ В роботу" />
             )}
           </div>
 
@@ -239,14 +217,14 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp,
   )
 }
 
-function MiniBtn({ onClick, color, label }: { onClick: () => void; color: string; label: string }) {
+function ActionBtn({ onClick, color, label }: { onClick: () => void; color: string; label: string }) {
   return (
     <button
       onClick={onClick}
       style={{
         background: color, color: '#fff',
         border: 'none', borderRadius: 8,
-        padding: '5px 10px', fontSize: 12, fontWeight: 600,
+        padding: '6px 12px', fontSize: 12, fontWeight: 700,
         cursor: 'pointer', whiteSpace: 'nowrap',
       }}
     >

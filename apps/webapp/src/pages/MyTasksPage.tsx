@@ -18,7 +18,6 @@ const TABS: { key: Tab; label: string; emoji: string }[] = [
 type ModalState =
   | { type: 'late'; task: Task }
   | { type: 'rework'; task: Task }
-  | { type: 'help'; task: Task }
   | null
 
 export default function MyTasksPage({}: Props) {
@@ -42,7 +41,7 @@ export default function MyTasksPage({}: Props) {
 
   const filtered = tasks.filter((t) => t.status === tab)
 
-  const handleAction = async (task: Task, action: 'take' | 'done' | 'rework' | 'help') => {
+  const handleAction = async (task: Task, action: 'done' | 'rework') => {
     if (action === 'done') {
       if (task.isOverdue) {
         setModal({ type: 'late', task })
@@ -51,8 +50,6 @@ export default function MyTasksPage({}: Props) {
       }
     } else if (action === 'rework') {
       setModal({ type: 'rework', task })
-    } else if (action === 'help') {
-      setModal({ type: 'help', task })
     }
   }
 
@@ -85,18 +82,6 @@ export default function MyTasksPage({}: Props) {
     } finally {
       setActionLoading(null)
     }
-  }
-
-  const doHelp = async (task: Task, message: string) => {
-    // Надсилаємо через бот-команду у чаті
-    const text = `допомога:#${task.id}: ${message}`
-    window.Telegram?.WebApp.close()
-    // Відкриваємо бот і передаємо текст (у реальному WebApp через Telegram.WebApp.sendData)
-    try {
-      window.Telegram?.WebApp.hapticFeedback?.notificationOccurred('success')
-    } catch {}
-    setModal(null)
-    alert(`Запит допомоги:\n\nНадішліть в чат боту:\n${text}`)
   }
 
   // Таб кунти
@@ -160,7 +145,6 @@ export default function MyTasksPage({}: Props) {
                 mode="my"
                 onDone={(t)   => handleAction(t, 'done')}
                 onRework={(t) => handleAction(t, 'rework')}
-                onHelp={(t)   => handleAction(t, 'help')}
               />
             </div>
           ))}
@@ -181,14 +165,6 @@ export default function MyTasksPage({}: Props) {
           title="⚠️ Відправити на переробку"
           placeholder="Опишіть причину переробки..."
           onConfirm={(comment) => doRework(modal.task, comment)}
-          onCancel={() => setModal(null)}
-        />
-      )}
-      {modal?.type === 'help' && (
-        <CommentModal
-          title="🆘 Запит допомоги"
-          placeholder="Опишіть проблему..."
-          onConfirm={(msg) => doHelp(modal.task, msg)}
           onCancel={() => setModal(null)}
         />
       )}
