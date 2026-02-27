@@ -12,14 +12,14 @@ export default function Layout({ user, children }: Props) {
 
   return (
     <div className="flex flex-col h-screen bg-tg-bg">
-      <main className="flex-1 overflow-y-auto pb-20">
+      <main className="flex-1 overflow-y-auto pb-16">
         {children}
       </main>
 
       {/* Нижня навігація — компактні pill-кнопки */}
       <nav className="fixed bottom-0 left-0 right-0 bg-tg-bg border-t border-gray-200 z-50"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        <div className="flex items-center justify-center gap-2 px-3 py-2">
+        <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto no-scrollbar">
 
           <NavLink
             to="/pool"

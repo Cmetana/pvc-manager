@@ -20,6 +20,13 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   Done:       { bg: '#D1FAE5', color: '#065F46' },
 }
 
+const BADGE: React.CSSProperties = {
+  fontWeight: 700, fontSize: 15, lineHeight: 1.3,
+  border: '1.5px solid #D1D5DB', borderRadius: 7,
+  padding: '2px 7px', flexShrink: 0,
+  color: 'var(--tg-theme-text-color, #111)',
+}
+
 export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp }: Props) {
   const [photoOpen, setPhotoOpen] = useState(false)
 
@@ -39,12 +46,12 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
         marginBottom: 8,
       }}>
 
-        {/* ── Фото зліва — на повну висоту картки ── */}
+        {/* ── Фото зліва — квадрат ── */}
         {task.photoUrl ? (
           <button
             onClick={() => setPhotoOpen(true)}
             style={{
-              flexShrink: 0, width: 80, alignSelf: 'stretch',
+              flexShrink: 0, width: 88, minHeight: 88, alignSelf: 'stretch',
               padding: 0, border: 'none', cursor: 'pointer', background: 'none',
             }}
           >
@@ -56,68 +63,61 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
           </button>
         ) : (
           <div style={{
-            flexShrink: 0, width: 44, alignSelf: 'stretch',
+            flexShrink: 0, width: 88, minHeight: 88, alignSelf: 'stretch',
             background: '#F3F4F6',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, color: '#D1D5DB',
+            fontSize: 22, color: '#D1D5DB',
           }}>
             📷
           </div>
         )}
 
         {/* ── Контент справа ── */}
-        <div style={{ flex: 1, padding: '10px 12px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div style={{ flex: 1, padding: '10px 12px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
 
-          {/* Рядок 1: Партія / Комірка  +  Статус */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, minWidth: 0 }}>
-              <span style={{ fontWeight: 800, fontSize: 18, lineHeight: 1.2, color: 'var(--tg-theme-text-color, #111)' }}>
-                {task.batch}
+          {/* Рядок 1: [Партія] / [Комірка] [Тип] [Назва типу]   Статус */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, flex: 1 }}>
+              <span style={BADGE}>{task.batch}</span>
+              <span style={{ color: '#C4C4C4', fontSize: 13, flexShrink: 0 }}>/</span>
+              <span style={BADGE}>{task.cell}</span>
+              <span style={{
+                fontFamily: 'monospace', fontSize: 11, fontWeight: 700,
+                background: '#EFF6FF', color: '#1D4ED8',
+                padding: '1px 6px', borderRadius: 6, flexShrink: 0,
+              }}>
+                {task.type?.code}
               </span>
-              <span style={{ color: '#C4C4C4', fontSize: 15 }}>/</span>
-              <span style={{ fontWeight: 700, fontSize: 18, lineHeight: 1.2, color: 'var(--tg-theme-text-color, #111)' }}>
-                {task.cell}
+              <span style={{
+                fontSize: 11, color: 'var(--tg-theme-hint-color, #888)',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                flex: 1, minWidth: 0,
+              }}>
+                {task.type?.label}
               </span>
             </div>
             <span style={{
               fontSize: 10, fontWeight: 600,
               padding: '2px 8px', borderRadius: 20,
               background: statusStyle.bg, color: statusStyle.color,
-              flexShrink: 0, marginLeft: 8, whiteSpace: 'nowrap',
+              flexShrink: 0, marginLeft: 4, whiteSpace: 'nowrap',
             }}>
               {STATUS_LABEL[task.status]}
             </span>
           </div>
 
-          {/* Рядок 2: Тип конструкції */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{
-              fontFamily: 'monospace', fontSize: 11, fontWeight: 700,
-              background: '#EFF6FF', color: '#1D4ED8',
-              padding: '1px 6px', borderRadius: 6, flexShrink: 0,
-            }}>
-              {task.type?.code}
-            </span>
-            <span style={{
-              fontSize: 12, color: 'var(--tg-theme-hint-color, #888)',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
-              {task.type?.label}
-            </span>
-          </div>
-
-          {/* Рядок 3: Дата · Імпости · СП  +  "В роботу" (pool/New — в одному рядку) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: isOverdue ? '#EF4444' : 'var(--tg-theme-text-color, #111)' }}>
+          {/* Рядок 2: Дата · Імпости · СП  +  "В роботу" (pool/New) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 10, flex: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: isOverdue ? '#EF4444' : 'var(--tg-theme-text-color, #111)' }}>
                 📅 {dateStr}
               </span>
               {task.impostsPerItem > 0 && (
-                <span style={{ fontSize: 13, color: 'var(--tg-theme-hint-color, #888)' }}>
+                <span style={{ fontSize: 16, color: 'var(--tg-theme-hint-color, #888)' }}>
                   📐 {task.impostsPerItem}
                 </span>
               )}
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#2563EB' }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#2563EB' }}>
                 💎 {sp} СП
               </span>
             </div>
@@ -140,7 +140,7 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
           {task.reworkComment && (
             <div style={{
               background: '#FFFBEB', border: '1px solid #FDE68A',
-              borderRadius: 8, padding: '5px 8px', marginTop: 2,
+              borderRadius: 8, padding: '5px 8px',
             }}>
               <p style={{ fontSize: 11, color: '#92400E', margin: 0 }}>⚠️ {task.reworkComment}</p>
             </div>
@@ -155,7 +155,7 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
 
           {/* Кнопки для режиму "Мої задачі" */}
           {mode === 'my' && task.status === 'InProgress' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 2 }}>
               <div style={{ display: 'flex', gap: 6 }}>
                 {onDone   && <ActionBtn onClick={() => onDone!(task)}   color="#10B981" label="✅ Виконано" flex />}
                 {onRework && <ActionBtn onClick={() => onRework!(task)} color="#F59E0B" label="⚠️ Переробка" flex />}
@@ -169,7 +169,7 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
             <div style={{
               background: '#FFFBEB', borderRadius: 8,
               padding: '7px 10px', fontSize: 12, color: '#92400E',
-              textAlign: 'center', marginTop: 4,
+              textAlign: 'center', marginTop: 2,
             }}>
               ⏳ Очікує підтвердження адміна
             </div>
