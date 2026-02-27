@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom'
-import { usersApi, getAdminTelegramId, setAdminTelegramId } from './api'
+import { usersApi, tasksApi, getAdminTelegramId, setAdminTelegramId } from './api'
 import type { User } from './types'
 import TasksPage from './pages/TasksPage'
 import UsersPage from './pages/UsersPage'
@@ -9,11 +9,13 @@ import StatsPage from './pages/StatsPage'
 import ImportPage from './pages/ImportPage'
 import HelpPage from './pages/HelpPage'
 import UnassignedPage from './pages/UnassignedPage'
+import ReworkPage from './pages/ReworkPage'
 import clsx from 'clsx'
 
 const NAV = [
   { path: '/tasks',      label: '📋 Задачі' },
   { path: '/unassigned', label: '🔴 Нерозподілені' },
+  { path: '/rework',     label: '⚠️ Переробки' },
   { path: '/users',      label: '👥 Користувачі' },
   { path: '/refs',       label: '📚 Довідники' },
   { path: '/import',     label: '📥 Імпорт' },
@@ -27,6 +29,7 @@ export default function App() {
   const [loginId, setLoginId] = useState('')
   const [loginError, setLoginError] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [reworkCount, setReworkCount] = useState(0)
 
   useEffect(() => {
     const saved = getAdminTelegramId()
@@ -36,6 +39,16 @@ export default function App() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  // Підтягуємо кількість переробок кожні 30 секунд
+  useEffect(() => {
+    if (!user) return
+    const fetchCount = () =>
+      tasksApi.list({ status: 'Rework' }).then(t => setReworkCount(t.length)).catch(() => {})
+    fetchCount()
+    const interval = setInterval(fetchCount, 30_000)
+    return () => clearInterval(interval)
+  }, [user])
 
   const handleLogin = async () => {
     setLoginError('')
@@ -119,11 +132,16 @@ export default function App() {
                 to={n.path}
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) => clsx(
-                  'block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  'flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                   isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'
                 )}
               >
-                {n.label}
+                <span>{n.label}</span>
+                {n.path === '/rework' && reworkCount > 0 && (
+                  <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                    {reworkCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
@@ -160,6 +178,7 @@ export default function App() {
               <Route path="/" element={<Navigate to="/tasks" replace />} />
               <Route path="/tasks"      element={<TasksPage />} />
               <Route path="/unassigned" element={<UnassignedPage />} />
+              <Route path="/rework"     element={<ReworkPage />} />
               <Route path="/users"      element={<UsersPage />} />
               <Route path="/refs"       element={<RefsPage />} />
               <Route path="/import"     element={<ImportPage />} />
