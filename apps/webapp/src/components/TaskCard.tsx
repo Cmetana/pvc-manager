@@ -3,11 +3,12 @@ import type { Task } from '../types'
 
 interface Props {
   task: Task
-  mode: 'pool' | 'my'
-  onTake?:   (task: Task) => void
-  onDone?:   (task: Task) => void
-  onRework?: (task: Task) => void
-  onHelp?:   (task: Task) => void
+  mode: 'pool' | 'my' | 'admin'
+  onTake?:    (task: Task) => void
+  onDone?:    (task: Task) => void
+  onRework?:  (task: Task) => void
+  onHelp?:    (task: Task) => void
+  onApprove?: (task: Task) => void
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -27,13 +28,17 @@ const BADGE: React.CSSProperties = {
   color: 'var(--tg-theme-text-color, #111)',
 }
 
-export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp }: Props) {
+export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp, onApprove }: Props) {
   const [photoOpen, setPhotoOpen] = useState(false)
 
   const sp = (task.impostsPerItem + 1) * task.qtyItems
   const isOverdue = task.status !== 'Done' && new Date(task.plannedDate) < new Date()
   const dateStr = new Date(task.plannedDate).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' })
   const statusStyle = STATUS_STYLE[task.status] ?? STATUS_STYLE.New
+
+  const reworkDate = task.reworkRequestedAt
+    ? new Date(task.reworkRequestedAt).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    : null
 
   return (
     <>
@@ -106,8 +111,8 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
             </span>
           </div>
 
-          {/* Рядок 2: Дата · Імпости · СП  +  "В роботу" (pool/New) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          {/* Рядок 2: Дата · Імпости · СП  +  кнопки справа */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
             <div style={{ display: 'flex', gap: 10, flex: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: isOverdue ? '#EF4444' : 'var(--tg-theme-text-color, #111)' }}>
                 📅 {dateStr}
@@ -121,6 +126,8 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
                 💎 {sp} СП
               </span>
             </div>
+
+            {/* Pool → В роботу */}
             {mode === 'pool' && task.status === 'New' && onTake && (
               <button
                 onClick={() => onTake(task)}
@@ -134,42 +141,60 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
                 ▶ В роботу
               </button>
             )}
+
+            {/* My InProgress → колонка кнопок */}
+            {mode === 'my' && task.status === 'InProgress' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}>
+                {onDone   && <MiniBtn onClick={() => onDone!(task)}   color="#10B981" label="✅ Виконано" />}
+                {onRework && <MiniBtn onClick={() => onRework!(task)} color="#F59E0B" label="⚠️ Переробка" />}
+                {onHelp   && <MiniBtn onClick={() => onHelp(task)}    color="#9CA3AF" label="🆘 Допомога" />}
+              </div>
+            )}
+
+            {/* Admin → підтвердити */}
+            {mode === 'admin' && task.status === 'Rework' && onApprove && (
+              <button
+                onClick={() => onApprove(task)}
+                style={{
+                  flexShrink: 0, background: '#10B981', color: '#fff',
+                  border: 'none', borderRadius: 10,
+                  padding: '7px 12px', fontSize: 12, fontWeight: 700,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}
+              >
+                ✅ В роботу
+              </button>
+            )}
           </div>
 
-          {/* Причина переробки */}
+          {/* Причина переробки + час запиту */}
           {task.reworkComment && (
             <div style={{
               background: '#FFFBEB', border: '1px solid #FDE68A',
               borderRadius: 8, padding: '5px 8px',
             }}>
               <p style={{ fontSize: 11, color: '#92400E', margin: 0 }}>⚠️ {task.reworkComment}</p>
+              {reworkDate && (
+                <p style={{ fontSize: 10, color: '#B45309', marginTop: 2, marginBottom: 0 }}>
+                  {reworkDate}
+                </p>
+              )}
             </div>
           )}
 
-          {/* Виконавець (тільки в пулі) */}
-          {task.assignee && mode === 'pool' && (
+          {/* Виконавець (в пулі та у адміна) */}
+          {task.assignee && (mode === 'pool' || mode === 'admin') && (
             <p style={{ fontSize: 11, color: 'var(--tg-theme-hint-color, #888)', margin: 0 }}>
               👷 {task.assignee.firstName ?? task.assignee.username}
             </p>
           )}
 
-          {/* Кнопки для режиму "Мої задачі" */}
-          {mode === 'my' && task.status === 'InProgress' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 2 }}>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {onDone   && <ActionBtn onClick={() => onDone!(task)}   color="#10B981" label="✅ Виконано" flex />}
-                {onRework && <ActionBtn onClick={() => onRework!(task)} color="#F59E0B" label="⚠️ Переробка" flex />}
-              </div>
-              {onHelp && (
-                <ActionBtn onClick={() => onHelp(task)} color="#9CA3AF" label="🆘 Потрібна допомога" flex />
-              )}
-            </div>
-          )}
+          {/* My Rework — очікування підтвердження */}
           {mode === 'my' && task.status === 'Rework' && (
             <div style={{
               background: '#FFFBEB', borderRadius: 8,
               padding: '7px 10px', fontSize: 12, color: '#92400E',
-              textAlign: 'center', marginTop: 2,
+              textAlign: 'center',
             }}>
               ⏳ Очікує підтвердження адміна
             </div>
@@ -214,16 +239,15 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
   )
 }
 
-function ActionBtn({ onClick, color, label, flex }: { onClick: () => void; color: string; label: string; flex?: boolean }) {
+function MiniBtn({ onClick, color, label }: { onClick: () => void; color: string; label: string }) {
   return (
     <button
       onClick={onClick}
       style={{
-        flex: flex ? 1 : undefined,
         background: color, color: '#fff',
-        border: 'none', borderRadius: 10,
-        padding: '10px 14px', fontSize: 13, fontWeight: 600,
-        cursor: 'pointer',
+        border: 'none', borderRadius: 8,
+        padding: '5px 10px', fontSize: 12, fontWeight: 600,
+        cursor: 'pointer', whiteSpace: 'nowrap',
       }}
     >
       {label}
