@@ -39,7 +39,9 @@ app.addHook('preHandler', async (request, reply) => {
   if (
     request.url.startsWith('/uploads/') ||
     request.url === '/health' ||
-    /^\/api\/tasks\/\d+\/photo$/.test(request.url)
+    // GET /api/tasks/:id/photo — публічний доступ, бо <img> не надсилає заголовки
+    // POST /api/tasks/:id/photo — потребує авторизації
+    (request.method === 'GET' && /^\/api\/tasks\/\d+\/photo(\?.*)?$/.test(request.url))
   ) return;
   const telegramId = request.headers['x-telegram-id'] as string;
   if (!telegramId) return reply.status(401).send({ error: 'Unauthorized' });
