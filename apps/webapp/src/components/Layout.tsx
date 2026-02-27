@@ -10,7 +10,7 @@ interface Props {
 export default function Layout({ children }: Props) {
   return (
     <div className="flex flex-col h-screen bg-tg-bg">
-      <main className="flex-1 overflow-y-auto pb-20">
+      <main className="flex-1 overflow-y-auto pb-28">
         {children}
       </main>
 

@@ -148,15 +148,21 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
         )}
 
         {/* Кнопки */}
-        <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
           {mode === 'pool' && task.status === 'New' && onTake && (
             <ActionBtn onClick={() => onTake(task)} color="#3B82F6" label="▶️ В роботу" flex />
           )}
           {mode === 'my' && task.status === 'InProgress' && (
             <>
-              {onDone   && <ActionBtn onClick={() => onDone(task)}   color="#10B981" label="✅ Виконано" flex />}
-              {onRework && <ActionBtn onClick={() => onRework(task)} color="#F59E0B" label="⚠️ Переробка" flex />}
-              {onHelp   && <ActionBtn onClick={() => onHelp(task)}   color="#6B7280" label="🆘" />}
+              {/* Виконано + Переробка — повну ширину ділять між собою */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {onDone   && <ActionBtn onClick={() => onDone(task)}   color="#10B981" label="✅ Виконано" flex />}
+                {onRework && <ActionBtn onClick={() => onRework(task)} color="#F59E0B" label="⚠️ Переробка" flex />}
+              </div>
+              {/* Допомога — окремий рядок, менш помітна */}
+              {onHelp && (
+                <ActionBtn onClick={() => onHelp(task)} color="#9CA3AF" label="🆘 Потрібна допомога" flex />
+              )}
             </>
           )}
           {mode === 'my' && task.status === 'Rework' && (

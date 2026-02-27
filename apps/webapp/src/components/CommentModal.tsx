@@ -18,7 +18,7 @@ export default function CommentModal({ title, placeholder, required = true, onCo
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-      <div className="w-full bg-tg-bg rounded-t-2xl p-5 shadow-xl">
+      <div className="w-full bg-tg-bg rounded-t-2xl p-5 shadow-xl" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom, 20px))' }}>
         <h2 className="text-lg font-bold text-tg-text mb-3">{title}</h2>
         <textarea
           className="w-full border border-gray-200 rounded-xl p-3 text-sm text-tg-text bg-tg-secondary resize-none focus:outline-none focus:ring-2 focus:ring-tg-button"
