@@ -63,22 +63,27 @@ export default function PoolPage({ user }: Props) {
   const totalSP = tasks.reduce((s, t) => s + t.sp, 0)
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Заголовок */}
-      <div>
-        <h1 className="text-xl font-bold text-tg-text">Пул задач</h1>
-        {user.team && (
-          <p className="text-sm text-tg-hint">{user.team.name}</p>
-        )}
-      </div>
+    <div className="p-3 space-y-3">
 
       {/* Блок командних задач */}
       <div className="rounded-xl bg-blue-50 px-3 pt-2.5 pb-3 space-y-2">
-        <div className="flex items-center gap-1.5">
-          <div className="w-1 h-3.5 bg-blue-500 rounded-full" />
-          <span className="text-xs font-bold text-blue-600 tracking-wide uppercase">
-            Командні задачі
-          </span>
+
+        {/* Шапка: назва + команда + лічильник в одному рядку */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="w-1 h-3.5 bg-blue-500 rounded-full shrink-0" />
+            <span className="text-xs font-bold text-blue-600 tracking-wide uppercase">
+              Командні задачі
+            </span>
+            {user.team && (
+              <span className="text-xs text-blue-400">· {user.team.name}</span>
+            )}
+          </div>
+          {!loading && tasks.length > 0 && (
+            <span className="text-xs text-blue-500 font-medium shrink-0">
+              {tasks.length} зад. · {totalSP} СП
+            </span>
+          )}
         </div>
 
         {/* Фільтр по даті */}
@@ -89,7 +94,7 @@ export default function PoolPage({ user }: Props) {
         />
 
         {/* Фільтр по статусу */}
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {STATUS_FILTERS.map((s) => (
             <button
               key={s.key}
@@ -106,14 +111,6 @@ export default function PoolPage({ user }: Props) {
           ))}
         </div>
       </div>
-
-      {/* Підсумок */}
-      {!loading && tasks.length > 0 && (
-        <div className="flex gap-4 text-sm text-tg-hint">
-          <span>Задач: <b className="text-tg-text">{tasks.length}</b></span>
-          <span>Всього СП: <b className="text-tg-text">{totalSP}</b></span>
-        </div>
-      )}
 
       {/* Список */}
       {loading ? (

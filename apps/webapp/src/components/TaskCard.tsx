@@ -11,13 +11,13 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  New: '🆕 Нове', InProgress: '🔧 В роботі', Rework: '⚠️ Переробка', Done: '✅ Виконано'
+  New: 'Нове', InProgress: 'В роботі', Rework: 'Переробка', Done: 'Виконано',
 }
-const STATUS_BG: Record<string, string> = {
-  New: '#F3F4F6',     // gray
-  InProgress: '#DBEAFE', // blue
-  Rework: '#FEF3C7',     // yellow
-  Done: '#D1FAE5',       // green
+const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
+  New:        { bg: '#F3F4F6', color: '#6B7280' },
+  InProgress: { bg: '#DBEAFE', color: '#1D4ED8' },
+  Rework:     { bg: '#FEF3C7', color: '#92400E' },
+  Done:       { bg: '#D1FAE5', color: '#065F46' },
 }
 
 export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp }: Props) {
@@ -25,150 +25,151 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
 
   const sp = (task.impostsPerItem + 1) * task.qtyItems
   const isOverdue = task.status !== 'Done' && new Date(task.plannedDate) < new Date()
-
-  const dateStr = new Date(task.plannedDate).toLocaleDateString('uk-UA', {
-    day: '2-digit', month: '2-digit'
-  })
+  const dateStr = new Date(task.plannedDate).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' })
+  const statusStyle = STATUS_STYLE[task.status] ?? STATUS_STYLE.New
 
   return (
     <>
-      <div
-        style={{
-          background: 'var(--tg-theme-bg-color, #fff)',
-          borderRadius: 16,
-          border: '1px solid',
-          borderColor: task.isOverdue ? '#FCA5A5' : 'var(--tg-theme-secondary-bg-color, #F3F4F6)',
-          padding: '12px 14px',
-          marginBottom: 10,
-        }}
-      >
-        {/* Верхній рядок: код типу + статус + дата */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* Тип — великий код */}
+      <div style={{
+        background: 'var(--tg-theme-bg-color, #fff)',
+        borderRadius: 14,
+        border: `1.5px solid ${task.isOverdue ? '#FCA5A5' : 'var(--tg-theme-secondary-bg-color, #EBEBEB)'}`,
+        overflow: 'hidden',
+        display: 'flex',
+        marginBottom: 8,
+      }}>
+
+        {/* ── Фото зліва — на повну висоту картки ── */}
+        {task.photoUrl ? (
+          <button
+            onClick={() => setPhotoOpen(true)}
+            style={{
+              flexShrink: 0, width: 80, alignSelf: 'stretch',
+              padding: 0, border: 'none', cursor: 'pointer', background: 'none',
+            }}
+          >
+            <img
+              src={task.photoUrl}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          </button>
+        ) : (
+          <div style={{
+            flexShrink: 0, width: 44, alignSelf: 'stretch',
+            background: '#F3F4F6',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 18, color: '#D1D5DB',
+          }}>
+            📷
+          </div>
+        )}
+
+        {/* ── Контент справа ── */}
+        <div style={{ flex: 1, padding: '10px 12px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+          {/* Рядок 1: Партія / Комірка  +  Статус */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, minWidth: 0 }}>
+              <span style={{ fontWeight: 800, fontSize: 18, lineHeight: 1.2, color: 'var(--tg-theme-text-color, #111)' }}>
+                {task.batch}
+              </span>
+              <span style={{ color: '#C4C4C4', fontSize: 15 }}>/</span>
+              <span style={{ fontWeight: 700, fontSize: 18, lineHeight: 1.2, color: 'var(--tg-theme-text-color, #111)' }}>
+                {task.cell}
+              </span>
+            </div>
             <span style={{
-              fontFamily: 'monospace',
-              fontSize: 13,
-              fontWeight: 700,
-              background: '#EFF6FF',
-              color: '#1D4ED8',
-              padding: '2px 8px',
-              borderRadius: 8,
-              letterSpacing: 0.5,
+              fontSize: 10, fontWeight: 600,
+              padding: '2px 8px', borderRadius: 20,
+              background: statusStyle.bg, color: statusStyle.color,
+              flexShrink: 0, marginLeft: 8, whiteSpace: 'nowrap',
+            }}>
+              {STATUS_LABEL[task.status]}
+            </span>
+          </div>
+
+          {/* Рядок 2: Тип конструкції */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{
+              fontFamily: 'monospace', fontSize: 11, fontWeight: 700,
+              background: '#EFF6FF', color: '#1D4ED8',
+              padding: '1px 6px', borderRadius: 6, flexShrink: 0,
             }}>
               {task.type?.code}
             </span>
-            <span style={{ fontSize: 13, color: 'var(--tg-theme-hint-color, #888)' }}>
+            <span style={{
+              fontSize: 12, color: 'var(--tg-theme-hint-color, #888)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
               {task.type?.label}
             </span>
           </div>
-          <span style={{
-            fontSize: 11,
-            background: STATUS_BG[task.status] ?? '#F3F4F6',
-            padding: '2px 8px',
-            borderRadius: 20,
-            fontWeight: 600,
-            color: '#374151',
-          }}>
-            {STATUS_LABEL[task.status]}
-          </span>
-        </div>
 
-        {/* Партія / комірка */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>{task.batch}</span>
-          <span style={{ color: '#9CA3AF' }}>/</span>
-          <span style={{ fontSize: 15 }}>{task.cell}</span>
-        </div>
-
-        {/* Фото + опис + метрики в ряд */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          {/* Фото мініатюра */}
-          {task.photoUrl && (
-            <button
-              onClick={() => setPhotoOpen(true)}
-              style={{
-                width: 52, height: 52,
-                borderRadius: 10,
-                border: '1px solid #E5E7EB',
-                overflow: 'hidden',
-                flexShrink: 0,
-                background: '#F9FAFB',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
-              <img
-                src={task.photoUrl}
-                alt="фото"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            </button>
-          )}
-
-          <div style={{ flex: 1 }}>
-            {/* Опис */}
-            {task.description && (
-              <p style={{ fontSize: 12, color: 'var(--tg-theme-hint-color, #888)', marginBottom: 4, lineHeight: 1.4 }}>
-                {task.description}
-              </p>
-            )}
-
-            {/* Метрики */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              <Chip icon="🔢" label={`${task.qtyItems} шт.`} />
-              {task.impostsPerItem > 0 && <Chip icon="📐" label={`${task.impostsPerItem} імп.`} />}
-              <Chip icon="💎" label={`${sp} СП`} bold />
-              <Chip
-                icon="📅"
-                label={dateStr}
-                color={isOverdue ? '#EF4444' : undefined}
-              />
+          {/* Рядок 3: Дата · Імпости · СП  +  "В роботу" (pool/New — в одному рядку) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, flex: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: isOverdue ? '#EF4444' : 'var(--tg-theme-text-color, #111)' }}>
+                📅 {dateStr}
+              </span>
+              {task.impostsPerItem > 0 && (
+                <span style={{ fontSize: 13, color: 'var(--tg-theme-hint-color, #888)' }}>
+                  📐 {task.impostsPerItem}
+                </span>
+              )}
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#2563EB' }}>
+                💎 {sp} СП
+              </span>
             </div>
+            {mode === 'pool' && task.status === 'New' && onTake && (
+              <button
+                onClick={() => onTake(task)}
+                style={{
+                  flexShrink: 0, background: '#3B82F6', color: '#fff',
+                  border: 'none', borderRadius: 10,
+                  padding: '7px 14px', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}
+              >
+                ▶ В роботу
+              </button>
+            )}
           </div>
-        </div>
 
-        {/* Виконавець */}
-        {task.assignee && (
-          <p style={{ fontSize: 12, color: 'var(--tg-theme-hint-color, #888)', marginBottom: 8 }}>
-            👷 {task.assignee.firstName ?? task.assignee.username}
-          </p>
-        )}
-
-        {/* Причина переробки */}
-        {task.reworkComment && (
-          <div style={{
-            background: '#FFFBEB', border: '1px solid #FDE68A',
-            borderRadius: 10, padding: '8px 10px', marginBottom: 8,
-          }}>
-            <p style={{ fontSize: 12, color: '#92400E', margin: 0 }}>
-              ⚠️ <strong>Причина переробки:</strong> {task.reworkComment}
-            </p>
-          </div>
-        )}
-
-        {/* Кнопки */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-          {mode === 'pool' && task.status === 'New' && onTake && (
-            <ActionBtn onClick={() => onTake(task)} color="#3B82F6" label="▶️ В роботу" flex />
+          {/* Причина переробки */}
+          {task.reworkComment && (
+            <div style={{
+              background: '#FFFBEB', border: '1px solid #FDE68A',
+              borderRadius: 8, padding: '5px 8px', marginTop: 2,
+            }}>
+              <p style={{ fontSize: 11, color: '#92400E', margin: 0 }}>⚠️ {task.reworkComment}</p>
+            </div>
           )}
+
+          {/* Виконавець (тільки в пулі) */}
+          {task.assignee && mode === 'pool' && (
+            <p style={{ fontSize: 11, color: 'var(--tg-theme-hint-color, #888)', margin: 0 }}>
+              👷 {task.assignee.firstName ?? task.assignee.username}
+            </p>
+          )}
+
+          {/* Кнопки для режиму "Мої задачі" */}
           {mode === 'my' && task.status === 'InProgress' && (
-            <>
-              {/* Виконано + Переробка — повну ширину ділять між собою */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 4 }}>
               <div style={{ display: 'flex', gap: 6 }}>
-                {onDone   && <ActionBtn onClick={() => onDone(task)}   color="#10B981" label="✅ Виконано" flex />}
-                {onRework && <ActionBtn onClick={() => onRework(task)} color="#F59E0B" label="⚠️ Переробка" flex />}
+                {onDone   && <ActionBtn onClick={() => onDone!(task)}   color="#10B981" label="✅ Виконано" flex />}
+                {onRework && <ActionBtn onClick={() => onRework!(task)} color="#F59E0B" label="⚠️ Переробка" flex />}
               </div>
-              {/* Допомога — окремий рядок, менш помітна */}
               {onHelp && (
                 <ActionBtn onClick={() => onHelp(task)} color="#9CA3AF" label="🆘 Потрібна допомога" flex />
               )}
-            </>
+            </div>
           )}
           {mode === 'my' && task.status === 'Rework' && (
             <div style={{
-              flex: 1, background: '#FFFBEB', borderRadius: 10,
-              padding: '8px 12px', fontSize: 13, color: '#92400E', textAlign: 'center',
+              background: '#FFFBEB', borderRadius: 8,
+              padding: '7px 10px', fontSize: 12, color: '#92400E',
+              textAlign: 'center', marginTop: 4,
             }}>
               ⏳ Очікує підтвердження адміна
             </div>
@@ -176,7 +177,7 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
         </div>
       </div>
 
-      {/* Прев'ю фото (повноекранне) */}
+      {/* Прев'ю фото на весь екран */}
       {photoOpen && task.photoUrl && (
         <div
           onClick={() => setPhotoOpen(false)}
@@ -213,34 +214,15 @@ export default function TaskCard({ task, mode, onTake, onDone, onRework, onHelp 
   )
 }
 
-function Chip({ icon, label, bold, color }: { icon: string; label: string; bold?: boolean; color?: string }) {
-  return (
-    <span style={{
-      fontSize: 12,
-      color: color ?? 'var(--tg-theme-hint-color, #666)',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 3,
-      fontWeight: bold ? 700 : 400,
-    }}>
-      {icon} {label}
-    </span>
-  )
-}
-
 function ActionBtn({ onClick, color, label, flex }: { onClick: () => void; color: string; label: string; flex?: boolean }) {
   return (
     <button
       onClick={onClick}
       style={{
         flex: flex ? 1 : undefined,
-        background: color,
-        color: '#fff',
-        border: 'none',
-        borderRadius: 10,
-        padding: '10px 14px',
-        fontSize: 14,
-        fontWeight: 600,
+        background: color, color: '#fff',
+        border: 'none', borderRadius: 10,
+        padding: '10px 14px', fontSize: 13, fontWeight: 600,
         cursor: 'pointer',
       }}
     >
